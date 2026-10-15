@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>TiendaMiriam</AssemblyName>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TiendaMiriam.Domain\TiendaMiriam.Domain.csproj" />
+    <ProjectReference Include="..\TiendaMiriam.Infrastructure\TiendaMiriam.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b12">
+  <title>Tienda Miriam | Panel</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font: 16px/1.55 Inter, "Segoe UI", system-ui, sans-serif;
+      background: #090b12;
+      color: #edf1fa;
+      --canvas:#090b12;
+      --surface:rgba(22,26,39,.78);
+      --surface-strong:#171b28;
+      --panel:rgba(31,37,54,.76);
+      --line:rgba(188,200,230,.13);
+      --ink:#edf1fa;
+      --muted:#9aa5bb;
+      --orange:#f29a55;
+      --orange-dark:#ffb36f;
+      --red:#fb7185;
+      --blue:#8da7ff;
+      --purple:#b39aff;
+      --green:#48d6a0;
+      --glass-shadow:0 18px 50px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.045);
+      --glass-blur:blur(18px);
+      scroll-behavior:smooth;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0 auto;
+      max-width:1280px;
+      padding:clamp(1rem,3vw,2rem);
+      min-height:100vh;
+      background:
+        radial-gradient(ellipse at 5% 0%,rgba(88,105,178,.18),transparent 36rem),
+        radial-gradient(ellipse at 95% 20%,rgba(135,87,183,.13),transparent 32rem),
+        var(--canvas);
+    }
+    h1 { margin:0; font-size:clamp(1.45rem,3vw,2rem); letter-spacing:.055em; color:#f6f7fc; }
+    h2 { font-size:1.05rem; color:#c5b4ff; margin:.1rem 0 .7rem; letter-spacing:.01em; }
+    header { display:flex; align-items:center; gap:1rem; margin-bottom:1.4rem; padding:.5rem 0; }
+    header p { margin:.15rem 0 0; color:var(--muted); }
+    header a { margin-left:auto; padding:.65rem .9rem; border:1px solid var(--line); border-radius:12px; color:#d9dfff; text-decoration:none; background:rgba(31,37,54,.54); transition:background .2s ease,border-color .2s ease,transform .2s ease; }
+    header a:hover { background:rgba(141,167,255,.12); border-color:rgba(141,167,255,.38); transform:translateY(-2px); }
+    .logo { width:54px; height:54px; flex:none; }
+    form, article, details {
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:1.15rem;
+      box-shadow:var(--glass-shadow);
+      -webkit-backdrop-filter:var(--glass-blur);
+      backdrop-filter:var(--glass-blur);
+    }
+    article, .ticket { transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease; }
+    .cards > article:hover, .analytics-grid > article:hover, #tickets > .ticket:hover {
+      transform:translateY(-4px);
+      border-color:rgba(141,167,255,.28);
+      box-shadow:0 24px 55px rgba(0,0,0,.36),0 0 26px rgba(141,167,255,.07),inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    input, select, button { font:inherit; padding:.72rem .85rem; border-radius:12px; }
+    input, select {
+      width:100%;
+      margin:.4rem 0 .7rem;
+      border:1px solid var(--line);
+      background:rgba(9,12,20,.72);
+      color:var(--ink);
+      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+    }
+    input:hover, select:hover { border-color:rgba(141,167,255,.3); }
+    input:focus, select:focus { background:#111522; border-color:var(--blue); box-shadow:0 0 0 3px rgba(141,167,255,.12); }
+    button {
+      border:1px solid rgba(242,154,85,.42);
+      background:linear-gradient(135deg,#ee8c4b,#c96736);
+      color:#fff8f2;
+      cursor:pointer;
+      font-weight:700;
+      margin:.2rem 0;
+      box-shadow:0 6px 18px rgba(201,103,54,.14);
+      transition:transform .18s ease,filter .18s ease,box-shadow .18s ease,border-color .18s ease;
+    }
+    button:hover:not(:disabled) { filter:brightness(1.12); transform:translateY(-2px); box-shadow:0 10px 24px rgba(201,103,54,.22); }
+    button:active:not(:disabled) { transform:translateY(0) scale(.985); }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visible { outline:3px solid var(--blue); outline-offset:3px; }
+    button:disabled { background:#292e3b; border-color:var(--line); color:#778198; cursor:not-allowed; box-shadow:none; }
+    .cards, .tools { display:grid; grid-template-columns:repeat(auto-fit,minmax(235px,1fr)); gap:1rem; margin-top:1rem; }
+    .value { font-size:clamp(1.65rem,3vw,2rem); font-weight:750; margin:.3rem 0; color:var(--blue); font-variant-numeric:tabular-nums; }
+    .cards article:first-child .value { color:var(--green); }
+    #message { min-height:1.5rem; color:var(--orange-dark); }
+    .wide { grid-column:1/-1; }
+    .hint { color:var(--muted); font-size:.88rem; }
+    .customer-row, .ticket { border-top:1px solid var(--line); padding:.7rem 0; overflow-wrap:anywhere; }
+    .ticket { display:flex; justify-content:space-between; align-items:center; gap:.7rem; }
+    .ticket button { min-width:105px; }
+    #preview { display:block; max-width:180px; max-height:180px; object-fit:contain; border-radius:14px; }
+    .analytics-grid { display:grid; grid-template-columns:2fr 1fr 2fr; gap:1rem; margin:1rem 0; }
+    .chart { min-height:190px; display:flex; align-items:end; gap:4px; padding:.6rem 0; }
+    .chart-column { min-width:0; flex:1; height:170px; display:flex; flex-direction:column; justify-content:end; align-items:center; gap:4px; }
+    .chart-bar { width:70%; min-height:2px; height:var(--bar-height); border-radius:7px 7px 2px 2px; background:linear-gradient(0deg,#8b79f6,var(--blue)); box-shadow:0 0 15px rgba(141,167,255,.18); transition:height .45s cubic-bezier(.2,.8,.2,1); }
+    .chart-label { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.68rem; color:var(--muted); }
+    .line-chart { display:block; width:100%; height:210px; overflow:visible; }
+    .line-chart text { fill:var(--muted); font:11px Inter,"Segoe UI",system-ui,sans-serif; }
+    .line-chart .grid-line { stroke:rgba(188,200,230,.14); stroke-width:1; }
+    .line-chart .data-line { fill:none; stroke:#8da7ff; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+    .line-chart .data-point { fill:#48d6a0; stroke:#111522; stroke-width:2; }
+    .analytics-grid article { min-width:0; }
+    .top-products { padding-left:1.25rem; }
+    .top-products li { margin:.35rem 0; }
+    #analyticsForm { display:flex; align-items:end; gap:.7rem; }
+    #analyticsForm label { flex:1; }
+    summary { cursor:pointer; color:#e5e8f3; }
+    summary h2 { display:inline-block; }
+    details[open] { animation:panel-in .22s ease both; }
+    table { width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border:1px solid var(--line); border-radius:16px; background:rgba(12,15,24,.48); }
+    th, td { padding:.7rem .8rem; border-bottom:1px solid var(--line); text-align:left; }
+    th { color:#c5b4ff; background:rgba(141,167,255,.07); }
+    tr:last-child td { border-bottom:0; }
+    a { color:#aebeff; }
+    @keyframes panel-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    @media print { :root { color-scheme:light; } body { color:#111; background:white; } header,form,details,button { display:none!important; } article { box-shadow:none;color:#111;background:white;border-color:#bbb;backdrop-filter:none; } }
+    @media(max-width:800px) { .analytics-grid { grid-template-columns:1fr; } #analyticsForm { display:grid; grid-template-columns:1fr 1fr; } #analyticsForm button { grid-column:1/-1; } }
+    @media(max-width:520px) { body { padding:.85rem; } header { flex-wrap:wrap; } header a { margin-left:0; } .cards,.tools { grid-template-columns:1fr; } #analyticsForm { grid-template-columns:1fr; } #analyticsForm button { grid-column:auto; } form,article,details { border-radius:17px; padding:1rem; } }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+  </style>
+</head>
+<body>
+  <header>
+    <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Logo Tienda Miriam">
+      <defs><linearGradient id="brand" x2="1" y2="1"><stop stop-color="#ff9d42"/><stop offset="1" stop-color="#d93624"/></linearGradient></defs>
+      <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#brand)"/>
+      <path d="M14 45V20h7l11 13 11-13h7v25h-8V31L32 42 22 31v14z" fill="#fff4ed"/>
+    </svg>
+    <div><h1>TIENDA MIRIAM</h1><p>Panel de control · Santa Cruz, Bolivia</p></div>
+    <a href="/kitchen.html" target="_blank" rel="noopener">Pantalla de cocina</a>
+  </header>
+  <form id="login">
+    <label for="username">Usuario</label>
+    <input id="username" autocomplete="username" required>
+    <label for="password">Contraseña</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Consultar panel</button>
+    <button type="button" id="logout">Salir</button>
+  </form>
+  <p id="message" role="status"></p>
+  <section class="cards" aria-live="polite">
+    <article><div>Ventas de hoy</div><div class="value" id="sales">—</div><div id="count">—</div></article>
+    <article><div>Alertas de inventario</div><div class="value" id="stock">—</div><button type="button" id="loadStock">Cargar existencias</button><div id="stockItems"></div></article>
+    <article><div>Cajas conectadas</div><div class="value" id="online">—</div><div id="pending">—</div></article>
+  </section>
+  <section>
+    <article>
+      <h2>Analítica de ventas</h2>
+      <form id="analyticsForm">
+        <label>Desde (Santa Cruz)<input name="from" type="date" required></label>
+        <label>Hasta (Santa Cruz)<input name="to" type="date" required></label>
+        <button>Actualizar gráficos</button>
+      </form>
+      <div class="analytics-grid">
+        <article><h2>Ventas de hoy · últimas 24 horas</h2><div id="todayHourlyChart" class="chart" aria-label="Ventas por hora en las últimas 24 horas"></div></article>
+        <article><h2>Tendencia semanal</h2><div id="weeklyTrendChart" class="chart" aria-label="Ventas por día en los últimos siete días"></div></article>
+        <article><h2>Ventas mensuales</h2><div id="monthlyChart" class="chart" aria-label="Ventas mensuales"></div></article>
+        <article><h2>Por hora</h2><div id="hourlyChart" class="chart" aria-label="Ventas por hora"></div></article>
+        <article><h2>Productos más vendidos</h2><ol id="topProducts" class="top-products"></ol></article>
+      </div>
+    </article>
+  </section>
+  <section class="tools">
+    <details>
+      <summary><h2>Clientes · monedero y fiado</h2></summary>
+      <form id="customerForm"><label>Nombre<input name="name" required maxlength="160"></label><label>Teléfono<input name="phone" maxlength="32"></label><label>Límite de crédito BOB<input name="creditLimit" type="number" min="0" step=".01" value="0"></label><button>Registrar cliente</button></form>
+      <form id="walletForm"><label>ID cliente<input name="customerId" required></label><label>Abono a monedero BOB<input name="amount" type="number" min=".01" step=".01" required></label><label>Detalle<input name="description" required maxlength="300"></label><button>Abonar saldo</button></form>
+      <form id="creditForm"><label>ID cliente<input name="customerId" required></label><label>Pago a cuenta BOB<input name="amount" type="number" min=".01" step=".01" required></label><label>Detalle<input name="description" required maxlength="300"></label><button>Registrar abono de fiado</button></form>
+      <div id="customers" class="hint"></div>
+    </details>
+    <details>
+      <summary><h2>Usuarios y roles</h2></summary>
+      <form id="userForm"><label>Usuario (3–64 letras/números/._-)<input name="username" required minlength="3" maxlength="64"></label><label>Contraseña temporal (mínimo 14 caracteres)<input name="password" type="password" required minlength="14"></label><label>Rol<select name="role"><option>Cashier</option><option>Kitchen</option><option>Administrator</option></select></label><button>Crear usuario</button></form>
+      <form id="passwordForm"><label>ID usuario<input name="userId" required></label><label>Nueva contraseña (mínimo 14 caracteres)<input name="password" type="password" required minlength="14"></label><button>Restablecer contraseña</button></form>
+      <div id="users" class="hint"></div>
+    </details>
+    <details>
+      <summary><h2>Gastos y proveedores</h2></summary>
+      <form id="expenseForm"><label>Detalle<input name="description" required maxlength="300"></label><label>Importe BOB<input name="amount" type="number" min=".01" step=".01" required></label><label>Fecha/hora<input name="occurredAt" type="datetime-local" required></label><button>Registrar gasto</button></form>
+      <form id="supplierForm"><label>Proveedor<input name="name" required maxlength="160"></label><label>NIT<input name="taxId" maxlength="40"></label><label>Teléfono<input name="phone" maxlength="32"></label><button>Registrar proveedor</button></form>
+      <form id="purchaseForm"><label>ID proveedor<input name="supplierId" required></label><label>Factura<input name="invoiceReference" required maxlength="100"></label><label>Fecha/hora recepción<input name="receivedAt" type="datetime-local" required></label><label>ID insumo<input name="stockItemId" required></label><label>Cantidad<input name="quantity" type="number" min=".000001" step=".000001" required></label><label>Costo unitario BOB<input name="unitCost" type="number" min="0" step=".0001" required></label><label>Lote<input name="lotCode" maxlength="80"></label><label>Caducidad (opcional)<input name="expiresAt" type="date"></label><button>Recibir compra</button></form>
+      <div id="suppliers" class="hint"></div>
+    </details>
+    <details>
+      <summary><h2>Consulta financiera y anulaciones</h2></summary>
+      <form id="reportForm"><label>Desde<input name="from" type="datetime-local" required></label><label>Hasta<input name="to" type="datetime-local" required></label><button>Generar reporte</button><button type="button" id="printReport">Imprimir reporte</button></form>
+      <article id="report" class="hint">El rango admite filtros hasta minuto; máximo 366 días.</article>
+      <form id="voidForm"><label>ID venta<input name="saleId" required></label><label>Motivo de anulación<input name="reason" required maxlength="500"></label><button>Anular venta completada</button></form>
+      <div id="audit" class="hint"></div>
+      <form id="paymentTypeForm"><label>Nuevo medio de pago<input name="name" required maxlength="80" placeholder="Tarjeta, transferencia bancaria..."></label><button>Agregar medio de pago</button></form>
+      <div id="paymentTypes" class="hint"></div>
+    </details>
+    <details>
+      <summary><h2>Catálogo · precios y fotografía</h2></summary>
+      <form id="productForm">
+        <label>SKU<input name="sku" required maxlength="64"></label><label>Descripción<input name="name" required maxlength="160"></label>
+        <label>Código de barras (opcional)<input name="barcode" maxlength="64"></label>
+        <label>Estación de impresión (KITCHEN, BAR, etc.)<input name="printStation" maxlength="80"></label>
+        <label>Departamento<select name="department"><option>Grocery</option><option>PreparedFood</option><option>MobileRecharge</option><option>Cleaning</option><option>Service</option><option>Other</option></select></label>
+        <label>Precio BOB<input name="price" type="number" min="0" step=".0001" required></label>
+        <label>Insumo asociado (artículo simple, opcional)<input name="stockItemId"></label>
+        <label><input name="isRecipe" type="checkbox"> Producto elaborado con receta</label>
+        <label>Componentes para receta (JSON)<textarea name="recipe" placeholder='[{"stockItemId":"UUID","quantity":100}]'></textarea></label>
+        <button>Crear producto</button>
+      </form>
+      <form id="stockForm"><label>Nombre del insumo<input name="name" required maxlength="160"></label><label>Unidad (g, ml, unidad)<input name="unit" required maxlength="24"></label><label>Stock inicial<input name="openingStock" type="number" min="0" step=".000001" required></label><label>Alerta de reposición<input name="reorderAt" type="number" min="0" step=".000001" required></label><label>Costo unitario BOB<input name="unitCost" type="number" min="0" step=".0001" required></label><button>Crear insumo</button></form>
+      <form id="recipeForm"><label>ID producto elaborado<input name="productId" required></label><label>Componentes JSON<textarea name="components" required placeholder='[{"stockItemId":"UUID","quantity":100}]'></textarea></label><button>Actualizar receta completa</button></form>
+      <form id="adjustForm"><label>ID insumo<input name="stockItemId" required></label><label>Ajuste de cantidad (positivo/negativo)<input name="delta" type="number" step=".000001" required></label><label>Motivo<input name="reason" required maxlength="500"></label><button>Ajustar stock con auditoría</button></form>
+      <form id="countForm"><label>Motivo<input name="reason" required maxlength="500" value="Recuento físico"></label><label>Líneas JSON (stockItemId y countedQuantity)<textarea name="lines" required placeholder='[{"stockItemId":"UUID","countedQuantity":12.5}]'></textarea></label><button>Aplicar recuento físico</button></form>
+      <button type="button" id="loadLots">Ver lotes y caducidades</button><div id="stockLots" class="hint"></div>
+      <form id="priceForm"><label>ID producto<input name="productId" required></label><label>Nuevo precio BOB<input name="price" type="number" min="0" step=".0001" required></label><button>Actualizar precio</button></form>
+      <form id="priceListForm"><label>Nombre de lista de precios<input name="name" required maxlength="80" placeholder="Mayorista"></label><button>Crear lista de precios</button></form>
+      <form id="listPriceForm"><label>ID lista de precios<input name="priceListId" required></label><label>ID producto<input name="productId" required></label><label>Precio preferencial BOB<input name="price" type="number" min="0" step=".01" required></label><button>Guardar precio de lista</button></form>
+      <div id="priceLists" class="hint"></div>
+      <form id="promotionForm">
+        <label>ID producto<input name="productId" required></label><label>Nombre de promoción<input name="name" required maxlength="100"></label>
+        <label>Tipo<select name="kind"><option value="0">Porcentaje de descuento</option><option value="1">Precio fijo BOB</option></select></label>
+        <label>Descuento (%) o precio fijo BOB<input name="value" type="number" min=".01" step=".01" required></label>
+        <label>Válida desde<input name="startsAt" type="datetime-local" required></label><label>Válida hasta<input name="endsAt" type="datetime-local" required></label>
+        <button>Programar promoción</button>
+      </form>
+      <div id="promotions" class="hint"></div>
+      <form id="photoForm"><label>ID producto<input name="productId" required></label><label>Fotografía JPEG/PNG/WebP · máximo 5 MB<input name="photo" type="file" accept="image/jpeg,image/png,image/webp" required></label><button>Guardar fotografía</button><button type="button" id="viewPhoto">Visualizar fotografía</button></form>
+      <img id="preview" alt="Vista previa de foto del producto">
+    </details>
+    <details class="wide">
+      <summary><h2>Comandas de cocina</h2></summary>
+      <div id="kitchen" class="hint">Actualización automática cada 5 segundos.</div>
+    </details>
+  </section>
+  <script>
+    const form = document.querySelector("#login");
+    const usernameInput = document.querySelector("#username");
+    const passwordInput = document.querySelector("#password");
+    const message = document.querySelector("#message");
+    const byId = id => document.getElementById(id);
+    function token() {
+      const value = sessionStorage.getItem("adminToken");
+      if (!value) throw new Error("Inicia sesión en el panel antes de usar esta función.");
+      return value;
+    }
+    async function api(path, method = "GET", body) {
+      const response = await fetch(path, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token()}`,
+          ...(body === undefined ? {} : { "Content-Type": "application/json" })
+        },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) })
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error ?? error.detail ?? `Respuesta del servidor: ${response.status}`);
+      }
+      return response.status === 204 ? null : response.json();
+    }
+    function values(event) { return Object.fromEntries(new FormData(event.currentTarget)); }
+    function bindForm(id, handler) {
+      byId(id).addEventListener("submit", async event => {
+        event.preventDefault();
+        try {
+          await handler(values(event), event.currentTarget);
+        } catch (error) {
+          message.textContent = error instanceof Error ? error.message : "No fue posible completar la operación.";
+        }
+      });
+    }
+    async function refreshStock() {
+      const items = await api("/api/admin/stock");
+      const container = byId("stockItems");
+      container.replaceChildren(...items.map(item => {
+        const row = document.createElement("div");
+        row.textContent = `${item.name} · ${item.id}: ${item.onHand} ${item.unit} · costo promedio ${Number(item.unitCost).toFixed(2)} BOB`;
+        return row;
+      }));
+    }
+    async function refreshUsers() {
+      const items = await api("/api/admin/users");
+      const container = byId("users");
+      container.replaceChildren(...items.map(item => {
+        const row = document.createElement("div");
+        row.className = "customer-row";
+        const label = document.createElement("span");
+        label.textContent = `${item.username} · ${item.role} · ${item.isActive ? "activo" : "desactivado"} · ${item.id}`;
+        const button = document.createElement("button");
+        button.textContent = item.isActive ? "Desactivar" : "Activar";
+        button.addEventListener("click", async () => {
+          try {
+            await api(`/api/admin/users/${item.id}/status`, "PUT", { isActive: !item.isActive });
+            await refreshUsers();
+          } catch (error) { message.textContent = error instanceof Error ? error.message : "No se pudo cambiar el usuario."; }
+        });
+        row.append(label, button);
+        return row;
+      }));
+    }
+    async function refreshCustomers() {
+      const items = await api("/api/customers");
+      const container = byId("customers");
+      container.replaceChildren(...items.map(item => {
+        const row = document.createElement("div");
+        row.className = "customer-row";
+        row.textContent = `${item.name} · ${item.id} · monedero ${Number(item.walletBalance).toFixed(2)} BOB · fiado ${Number(item.creditBalance).toFixed(2)} / ${Number(item.creditLimit).toFixed(2)} BOB`;
+        return row;
+      }));
+    }
+    async function refreshSuppliers() {
+      const items = await api("/api/admin/suppliers");
+      const container = byId("suppliers");
+      container.replaceChildren(...items.map(item => {
+        const row = document.createElement("div");
+        row.textContent = `${item.name} · ${item.id}${item.taxId ? ` · NIT ${item.taxId}` : ""}`;
+        return row;
+      }));
+    }
+    async function refreshKitchen() {
+      try {
+        const tickets = await api("/api/kitchen/tickets");
+        const container = byId("kitchen");
+        container.replaceChildren(...tickets.map(ticket => {
+          const row = document.createElement("div");
+          row.className = "ticket";
+          const detail = document.createElement("span");
+          detail.textContent = `${ticket.createdAt} · ${ticket.lines.map(line => `${line.quantity} × ${line.productName}`).join(", ")} · ${ticket.state}`;
+          const button = document.createElement("button");
+          const next = { Queued: "Preparing", Preparing: "Ready", Ready: "Served" }[ticket.state];
+          if (!next) return row;
+          button.textContent = { Preparing: "Preparando", Ready: "Lista", Served: "Entregada" }[next];
+          button.addEventListener("click", async () => {
+            try { await api(`/api/kitchen/tickets/${ticket.id}`, "PATCH", { state: next }); await refreshKitchen(); }
+            catch (error) { message.textContent = error instanceof Error ? error.message : "Error actualizando comanda."; }
+          });
+          row.append(detail, button);
+          return row;
+        }));
+      } catch (error) {
+        byId("kitchen").textContent = error instanceof Error ? error.message : "No se pudo cargar la cocina.";
+      }
+    }
+    async function refresh() {
+      try {
+        const data = await api("/api/mobile/overview");
+        byId("sales").textContent = `${Number(data.salesToday).toFixed(2)} BOB`;
+        byId("count").textContent = `${data.salesCountToday} ventas`;
+        byId("stock").textContent = data.productsLowOnStock;
+        byId("online").textContent = data.onlineTerminals;
+        byId("pending").textContent = `${data.pendingOutboxItems} ventas pendientes en cajas conectadas`;
+        await Promise.all([refreshStock(), refreshCustomers(), refreshSuppliers(), refreshUsers(), refreshKitchen(), refreshAnalytics(), refreshPaymentTypes(), refreshPriceLists(), refreshPromotions()]);
+        message.textContent = `Actualizado: ${new Date().toLocaleTimeString()}`;
+      } catch (error) {
+        sessionStorage.removeItem("adminToken");
+        message.textContent = error instanceof Error ? error.message : "No fue posible consultar el panel.";
+      }
+    }
+    function businessDate(date) {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/La_Paz", year: "numeric", month: "2-digit", day: "2-digit"
+      }).formatToParts(date);
+      const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      return `${values.year}-${values.month}-${values.day}`;
+    }
+    function renderBars(container, points, label, value) {
+      const max = Math.max(1, ...points.map(value));
+      container.replaceChildren(...points.map(point => {
+        const column = document.createElement("div");
+        column.className = "chart-column";
+        column.title = `${label(point)} · ${Number(value(point)).toFixed(2)} BOB`;
+        const bar = document.createElement("div");
+        bar.className = "chart-bar";
+        bar.style.setProperty("--bar-height", `${Math.max(2, value(point) / max * 145)}px`);
+        const caption = document.createElement("span");
+        caption.className = "chart-label";
+        caption.textContent = label(point);
+        column.append(bar, caption);
+        return column;
+      }));
+    }
+    function renderLineChart(container, points, label, value) {
+      const width = 640;
+      const height = 210;
+      const margin = { left: 48, right: 16, top: 12, bottom: 34 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      const values = points.map(point => Number(value(point)) || 0);
+      const max = Math.max(1, ...values);
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.setAttribute("role", "img");
+      svg.setAttribute("class", "line-chart");
+      svg.setAttribute("aria-label", container.getAttribute("aria-label") || "Gráfico de ventas");
+      const add = (name, attributes, text) => {
+        const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+        for (const [key, entry] of Object.entries(attributes)) node.setAttribute(key, entry);
+        if (text !== undefined) node.textContent = text;
+        svg.append(node);
+        return node;
+      };
+      for (let row = 0; row < 4; row++) {
+        const y = margin.top + plotHeight * row / 3;
+        add("line", { x1: margin.left, x2: width - margin.right, y1: y, y2: y, class: "grid-line" });
+        add("text", { x: 4, y: y + 4 }, `${(max * (3 - row) / 3).toFixed(0)} Bs`);
+      }
+      const coordinates = values.map((amount, index) => ({
+        x: margin.left + (points.length <= 1 ? plotWidth / 2 : plotWidth * index / (points.length - 1)),
+        y: margin.top + plotHeight - amount / max * plotHeight
+      }));
+      if (coordinates.length > 1) {
+        add("polyline", {
+          points: coordinates.map(point => `${point.x},${point.y}`).join(" "),
+          class: "data-line"
+        });
+      }
+      coordinates.forEach((point, index) => {
+        const marker = add("circle", { cx: point.x, cy: point.y, r: 4, class: "data-point" });
+        const tooltip = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        tooltip.textContent = `${label(points[index])} · ${values[index].toFixed(2)} BOB`;
+        marker.append(tooltip);
+        const labelStride = points.length > 16 ? 4 : points.length > 8 ? 2 : 1;
+        if (index % labelStride === 0 || index === points.length - 1) {
+          add("text", { x: point.x, y: height - 8, "text-anchor": "middle" }, label(points[index]));
+        }
+      });
+      container.replaceChildren(svg);
+    }
+    async function refreshAnalytics() {
+      const form = byId("analyticsForm");
+      if (!form.elements.from.value) {
+        const today = new Date();
+        const previousYear = new Date(today);
+        previousYear.setDate(previousYear.getDate() - 365);
+        form.elements.from.value = businessDate(previousYear);
+        form.elements.to.value = businessDate(today);
+      }
+      const from = `${form.elements.from.value}T00:00:00-04:00`;
+      const until = new Date(`${form.elements.to.value}T00:00:00-04:00`);
+      until.setUTCDate(until.getUTCDate() + 1);
+      const query = new URLSearchParams({
+        from: new Date(from).toISOString(),
+        to: until.toISOString()
+      });
+      const result = await api(`/api/admin/analytics?${query}`);
+      renderLineChart(byId("todayHourlyChart"), result.recentHourlySales,
+        point => new Intl.DateTimeFormat("es-BO", {
+          timeZone: "America/La_Paz", hour: "2-digit", hour12: false
+        }).format(new Date(point.hour)), point => point.revenue);
+      renderLineChart(byId("weeklyTrendChart"), result.weeklySales,
+        point => new Intl.DateTimeFormat("es-BO", {
+          timeZone: "America/La_Paz", weekday: "short", day: "2-digit"
+        }).format(new Date(`${point.date}T12:00:00-04:00`)), point => point.revenue);
+      renderBars(byId("monthlyChart"), result.monthlySales, point => point.month, point => point.revenue);
+      renderBars(byId("hourlyChart"), result.salesByHour, point => `${String(point.hour).padStart(2, "0")}:00`, point => point.revenue);
+      byId("topProducts").replaceChildren(...result.topProducts.map(point => {
+        const row = document.createElement("li");
+        row.textContent = `${point.productName} · ${Number(point.quantity).toLocaleString()} u. · ${Number(point.revenue).toFixed(2)} BOB`;
+        return row;
+      }));
+    }
+    async function refreshPaymentTypes() {
+      const items = await api("/api/payment-types");
+      byId("paymentTypes").replaceChildren(...items.map(item => {
+        const row = document.createElement("div");
+        row.textContent = `${item.name} · ${item.id}`;
+        return row;
+      }));
+    }
+    async function refreshPriceLists() {
+      const items = await api("/api/admin/price-lists");
+      byId("priceLists").replaceChildren(...items.map(item => {
+        const row = document.createElement("div");
+        row.textContent = `${item.name} · ${item.id} · ${item.isActive ? "activa" : "inactiva"}`;
+        return row;
+      }));
+    }
+    async function refreshPromotions() {
+      const items = await api("/api/admin/promotions");
+      byId("promotions").replaceChildren(...items.map(item => {
+        const row = document.createElement("div");
+        row.textContent = `${item.name} · producto ${item.productId} · ${item.kind === 0 ? `${Number(item.value).toFixed(2)}% descuento` : `${Number(item.value).toFixed(2)} BOB`} · ${new Date(item.startsAt).toLocaleString()}–${new Date(item.endsAt).toLocaleString()} · ${item.isActive ? "activa" : "inactiva"}`;
+        return row;
+      }));
+    }
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      message.textContent = "Consultando…";
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: usernameInput.value.trim(), password: passwordInput.value })
+        });
+        if (!response.ok) throw new Error(response.status === 429 ? "Demasiados intentos; espera un minuto." : "Usuario o contraseña incorrectos.");
+        const session = await response.json();
+        sessionStorage.setItem("adminToken", session.accessToken);
+        passwordInput.value = "";
+        await refresh();
+      } catch (error) {
+        message.textContent = error instanceof Error ? error.message : "No fue posible iniciar sesión.";
+      }
+    });
+    byId("logout").addEventListener("click", () => {
+      sessionStorage.removeItem("adminToken");
+      message.textContent = "Sesión eliminada de esta pestaña.";
+    });
+    byId("analyticsForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      try { await refreshAnalytics(); message.textContent = "Analítica actualizada."; }
+      catch (error) { message.textContent = error instanceof Error ? error.message : "No se pudo cargar la analítica."; }
+    });
+    byId("loadStock").addEventListener("click", async () => {
+      try { await refreshStock(); } catch (error) { message.textContent = error.message; }
+    });
+    bindForm("customerForm", async (data, target) => {
+      const customer = await api("/api/customers", "POST", {
+        name: data.name, phone: data.phone || null, creditLimit: Number(data.creditLimit)
+      });
+      target.reset();
+      message.textContent = `Cliente creado: ${customer.name} · ${customer.id}`;
+      await refreshCustomers();
+    });
+    for (const [formId, suffix, action] of [
+      ["walletForm", "wallet", "Abono registrado."],
+      ["creditForm", "credit-payment", "Pago a cuenta registrado."]
+    ]) bindForm(formId, async (data, target) => {
+      await api(`/api/customers/${encodeURIComponent(data.customerId)}/${suffix}`, "POST", {
+        amount: Number(data.amount), description: data.description
+      });
+      target.reset(); message.textContent = action; await refreshCustomers();
+    });
+    bindForm("expenseForm", async (data, target) => {
+      await api("/api/admin/expenses", "POST", {
+        description: data.description, amount: Number(data.amount), occurredAt: new Date(data.occurredAt).toISOString()
+      });
+      target.reset(); message.textContent = "Gasto registrado.";
+    });
+    bindForm("supplierForm", async (data, target) => {
+      const supplier = await api("/api/admin/suppliers", "POST", {
+        name: data.name, taxId: data.taxId || null, phone: data.phone || null
+      });
+      target.reset(); message.textContent = `Proveedor creado: ${supplier.name} · ${supplier.id}`; await refreshSuppliers();
+    });
+    bindForm("userForm", async (data, target) => {
+      const user = await api("/api/admin/users", "POST", {
+        username: data.username, password: data.password, role: data.role
+      });
+      target.reset(); message.textContent = `Usuario creado: ${user.username} · ${user.role}`;
+      await refreshUsers();
+    });
+    bindForm("passwordForm", async (data, target) => {
+      await api(`/api/admin/users/${encodeURIComponent(data.userId)}/password`, "PUT", {
+        password: data.password
+      });
+      target.reset(); message.textContent = "Contraseña restablecida; sesiones anteriores revocadas.";
+      await refreshUsers();
+    });
+    bindForm("purchaseForm", async (data, target) => {
+      const expiresAt = data.expiresAt
+        ? new Date(`${data.expiresAt}T23:59:59-04:00`).toISOString()
+        : null;
+      const result = await api("/api/admin/purchases", "POST", {
+        supplierId: data.supplierId, invoiceReference: data.invoiceReference,
+        receivedAt: new Date(data.receivedAt).toISOString(),
+        lines: [{
+          stockItemId: data.stockItemId, quantity: Number(data.quantity),
+          unitCost: Number(data.unitCost), lotCode: data.lotCode.trim() || null, expiresAt
+        }]
+      });
+      target.reset(); message.textContent = `Compra recibida: ${Number(result.total).toFixed(2)} BOB`;
+      await refreshStock();
+    });
+    bindForm("priceForm", async (data, target) => {
+      await api(`/api/admin/products/${encodeURIComponent(data.productId)}/price`, "PUT", { price: Number(data.price) });
+      target.reset(); message.textContent = "Precio actualizado y auditado.";
+    });
+    bindForm("priceListForm", async (data, target) => {
+      const result = await api("/api/admin/price-lists", "POST", { name: data.name });
+      target.reset();
+      message.textContent = `Lista creada: ${result.name} · ${result.id}`;
+      await refreshPriceLists();
+    });
+    bindForm("listPriceForm", async (data, target) => {
+      await api(`/api/admin/price-lists/${encodeURIComponent(data.priceListId)}/products`, "PUT", {
+        productId: data.productId, price: Number(data.price)
+      });
+      target.reset(); message.textContent = "Precio preferencial guardado y auditado.";
+    });
+    bindForm("promotionForm", async (data, target) => {
+      const result = await api("/api/admin/promotions", "POST", {
+        productId: data.productId,
+        name: data.name,
+        kind: Number(data.kind),
+        value: Number(data.value),
+        startsAt: new Date(data.startsAt).toISOString(),
+        endsAt: new Date(data.endsAt).toISOString()
+      });
+      target.reset(); message.textContent = `Promoción programada: ${result.name} · ${result.id}`;
+      await refreshPromotions();
+    });
+    bindForm("productForm", async (data, target) => {
+      const recipe = data.recipe.trim() ? JSON.parse(data.recipe) : [];
+      const result = await api("/api/admin/products", "POST", {
+        sku: data.sku, name: data.name, price: Number(data.price),
+        department: data.department, isRecipe: data.isRecipe === "on",
+        stockItemId: data.stockItemId.trim() || null, recipe,
+        barcode: data.barcode.trim() || null, printStation: data.printStation.trim() || null
+      });
+      target.reset(); message.textContent = `Producto creado: ${result.name} · ${result.id}`;
+    });
+    bindForm("stockForm", async (data, target) => {
+      const item = await api("/api/admin/stock", "POST", {
+        name: data.name, unit: data.unit, openingStock: Number(data.openingStock),
+        reorderAt: Number(data.reorderAt), unitCost: Number(data.unitCost)
+      });
+      target.reset(); message.textContent = `Insumo creado: ${item.name} · ${item.id}`;
+      await refreshStock();
+    });
+    bindForm("recipeForm", async (data, target) => {
+      const components = JSON.parse(data.components);
+      await api(`/api/admin/products/${encodeURIComponent(data.productId)}/recipe`, "PUT", { components });
+      target.reset(); message.textContent = "Receta reemplazada y auditada.";
+    });
+    bindForm("adjustForm", async (data, target) => {
+      await api(`/api/admin/stock/${encodeURIComponent(data.stockItemId)}/adjust`, "POST", {
+        delta: Number(data.delta), reason: data.reason
+      });
+      target.reset(); message.textContent = "Ajuste de inventario guardado con auditoría.";
+      await refreshStock();
+    });
+    bindForm("countForm", async (data, target) => {
+      const lines = JSON.parse(data.lines);
+      const result = await api("/api/admin/stock/counts", "POST", { reason: data.reason, lines });
+      target.reset();
+      message.textContent = `Recuento auditado: ${result.itemsCounted} insumos · variación absoluta ${Number(result.absoluteVariance).toFixed(6)} unidades.`;
+      await refreshStock();
+    });
+    bindForm("paymentTypeForm", async (data, target) => {
+      const result = await api("/api/admin/payment-types", "POST", { name: data.name });
+      target.reset();
+      message.textContent = `Medio de pago creado: ${result.name}.`;
+      await refreshPaymentTypes();
+    });
+    byId("loadLots").addEventListener("click", async () => {
+      try {
+        const items = await api("/api/admin/stock/lots?includeDepleted=true");
+        const now = Date.now();
+        byId("stockLots").replaceChildren(...items.map(item => {
+          const row = document.createElement("div");
+          const expiration = item.expiresAt ? new Date(item.expiresAt) : null;
+          const state = !expiration ? "sin caducidad" : expiration.getTime() < now ? "VENCIDO" : "vigente";
+          row.textContent = `${item.lotCode} · ${item.stockItemId} · ${Number(item.remainingQuantity).toFixed(6)} restantes · ${expiration ? expiration.toLocaleDateString() : "sin fecha"} · ${state}`;
+          return row;
+        }));
+      } catch (error) { message.textContent = error instanceof Error ? error.message : "No se pudieron cargar los lotes."; }
+    });
+    bindForm("voidForm", async (data, target) => {
+      await api(`/api/admin/sales/${encodeURIComponent(data.saleId)}/void`, "POST", { reason: data.reason });
+      target.reset(); message.textContent = "Venta anulada; stock y cuentas se revirtieron con auditoría.";
+    });
+    bindForm("photoForm", async (data, target) => {
+      const file = target.elements.photo.files[0];
+      if (!file || file.size > 5 * 1024 * 1024) throw new Error("Selecciona una imagen válida de hasta 5 MB.");
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("No se pudo leer el archivo de imagen."));
+        reader.onload = () => resolve(String(reader.result).split(",")[1]);
+        reader.readAsDataURL(file);
+      });
+      await api(`/api/admin/products/${encodeURIComponent(data.productId)}/photo`, "PUT", {
+        contentType: file.type, base64Data
+      });
+      message.textContent = "Fotografía guardada."; target.elements.photo.value = "";
+    });
+    byId("viewPhoto").addEventListener("click", async () => {
+      try {
+        const id = byId("photoForm").elements.productId.value.trim();
+        const response = await fetch(`/api/products/${encodeURIComponent(id)}/photo`, {
+          headers: { Authorization: `Bearer ${token()}` }
+        });
+        if (!response.ok) throw new Error(`No se pudo cargar la foto: ${response.status}`);
+        const url = URL.createObjectURL(await response.blob());
+        const image = byId("preview");
+        if (image.dataset.url) URL.revokeObjectURL(image.dataset.url);
+        image.dataset.url = url; image.src = url;
+      } catch (error) { message.textContent = error instanceof Error ? error.message : "Error cargando foto."; }
+    });
+    bindForm("reportForm", async (data, target) => {
+      const query = new URLSearchParams({
+        from: new Date(data.from).toISOString(), to: new Date(data.to).toISOString()
+      });
+      const result = await api(`/api/admin/reports/summary?${query}`);
+      const profit = result.netProfit === null
+        ? `N/D: ${result.salesWithoutCostSnapshot} ventas sin costo histórico`
+        : `${Number(result.netProfit).toFixed(2)} BOB`;
+      byId("report").textContent = `Ventas: ${result.completedSales} · Ingresos: ${Number(result.revenue).toFixed(2)} BOB · Costo de ventas: ${Number(result.costOfGoods).toFixed(2)} BOB · Ganancia bruta: ${result.grossProfit == null ? "N/D" : Number(result.grossProfit).toFixed(2)} BOB · Gastos: ${Number(result.expenses).toFixed(2)} BOB · Utilidad neta: ${profit} · Inversión en compras recibidas: ${Number(result.purchaseInvestment).toFixed(2)} BOB`;
+      message.textContent = "Reporte generado.";
+    });
+    byId("printReport").addEventListener("click", () => {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        message.textContent = "El navegador bloqueó la ventana de impresión; permite ventanas emergentes para este sitio.";
+        return;
+      }
+      const heading = printWindow.document.createElement("h1");
+      heading.textContent = "Tienda Miriam · Reporte financiero";
+      const content = printWindow.document.createElement("p");
+      content.textContent = byId("report").textContent;
+      printWindow.document.body.append(heading, content);
+      printWindow.document.title = "Reporte financiero · Tienda Miriam";
+      printWindow.print();
+    });
+    window.setInterval(() => {
+      if (!sessionStorage.getItem("adminToken")) return;
+      refreshKitchen();
+      refresh().catch(error => { message.textContent = error.message; });
+    }, 30000);
+  </script>
+</body>
+</html>

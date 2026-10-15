@@ -1,0 +1,45 @@
+@baseUrl = http://localhost:5000
+@token = replace-with-administrator-jwt
+@priceListId = replace-with-price-list-id
+@productId = replace-with-product-id
+
+### List active and inactive price lists
+GET {{baseUrl}}/api/admin/price-lists
+Authorization: Bearer {{token}}
+
+### Create a BOB price list
+POST {{baseUrl}}/api/admin/price-lists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Mayorista"
+}
+
+### Set a product price in the selected list
+PUT {{baseUrl}}/api/admin/price-lists/{{priceListId}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": "{{productId}}",
+  "price": 12.50
+}
+
+### List promotions
+GET {{baseUrl}}/api/admin/promotions
+Authorization: Bearer {{token}}
+
+### Create a fixed-price promotion (kind 1 = FixedPrice)
+POST {{baseUrl}}/api/admin/promotions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": "{{productId}}",
+  "name": "Precio especial",
+  "kind": 1,
+  "value": 10.00,
+  "startsAt": "2030-05-01T08:00:00-04:00",
+  "endsAt": "2030-05-01T20:00:00-04:00"
+}

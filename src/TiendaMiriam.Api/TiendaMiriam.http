@@ -1,0 +1,193 @@
+@baseUrl = https://localhost:7001
+@adminToken = {{adminJwt}}
+@cashierToken = {{cashierJwt}}
+@kitchenToken = {{kitchenJwt}}
+@productId = 00000000-0000-0000-0000-000000000001
+@stockItemId = 00000000-0000-0000-0000-000000000002
+@customerId = 00000000-0000-0000-0000-000000000003
+@saleId = 00000000-0000-0000-0000-000000000004
+@supplierId = 00000000-0000-0000-0000-000000000005
+@productionBatchId = 00000000-0000-0000-0000-000000000006
+@finishedProductId = 00000000-0000-0000-0000-000000000007
+
+### Create initial administrator or sign in
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{"username":"owner","password":"{{ownerPassword}}"}
+
+### POS catalog download, cashier role
+GET {{baseUrl}}/api/catalog
+Authorization: Bearer {{cashierToken}}
+
+### Synchronization idempotency reconciliation
+POST {{baseUrl}}/api/sync/sales/status
+Authorization: Bearer {{cashierToken}}
+Content-Type: application/json
+
+{"saleIds":["{{saleId}}"]}
+
+### Synchronize a completed POS sale
+POST {{baseUrl}}/api/sync/sales
+Authorization: Bearer {{cashierToken}}
+Content-Type: application/json
+
+{"saleId":"{{saleId}}","terminalId":"POS-01","lines":[{"productId":"{{productId}}","quantity":1,"unitPriceAtSale":5}],"paymentMethod":"Cash","amountTendered":10,"occurredAtUtc":"2026-10-07T10:15:00-04:00"}
+
+### Synchronize an offline finished-goods production batch (administrator)
+POST {{baseUrl}}/api/sync/production
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"batchId":"{{productionBatchId}}","productId":"{{finishedProductId}}","quantityProduced":80,"ingredients":[{"stockItemId":"{{stockItemId}}","quantityConsumed":10}]}
+
+### Product photo
+GET {{baseUrl}}/api/products/{{productId}}/photo
+Authorization: Bearer {{cashierToken}}
+
+### Create a raw ingredient
+POST {{baseUrl}}/api/admin/stock
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"name":"Harina","unit":"g","openingStock":5000,"reorderAt":500,"unitCost":0.02}
+
+### Create a product with recipe
+POST {{baseUrl}}/api/admin/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"sku":"COM-001","name":"Empanada","price":5,"isRecipe":true,"stockItemId":null,"department":"PreparedFood","recipe":[{"stockItemId":"{{stockItemId}}","quantity":100}]}
+
+### Update a recipe
+PUT {{baseUrl}}/api/admin/products/{{productId}}/recipe
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"components":[{"stockItemId":"{{stockItemId}}","quantity":100}]}
+
+### Update product price
+PUT {{baseUrl}}/api/admin/products/{{productId}}/price
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"price":5.5}
+
+### Adjust inventory with audit
+POST {{baseUrl}}/api/admin/stock/{{stockItemId}}/adjust
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"delta":-2,"reason":"Merma documentada"}
+
+### Register supplier
+POST {{baseUrl}}/api/admin/suppliers
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"name":"Proveedor Santa Cruz","taxId":"123456789","phone":"70000000","address":"Av. Principal 123","contactName":"María"}
+
+### Update supplier contact details
+PUT {{baseUrl}}/api/admin/suppliers/{{supplierId}}
+Authorization: ****** 
+Content-Type: application/json
+
+{"name":"Proveedor Santa Cruz","taxId":"123456789","phone":"71111111","address":"Calle Mercado 456","contactName":"María"}
+
+### Receive purchase and record historical cost
+POST {{baseUrl}}/api/admin/purchases
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"supplierId":"{{supplierId}}","invoiceReference":"FAC-001","receivedAt":"2026-10-07T10:15:00-04:00","lines":[{"stockItemId":"{{stockItemId}}","quantity":1000,"unitCost":0.03}]}
+
+### Purchase price history
+GET {{baseUrl}}/api/admin/purchase-history?stockItemId={{stockItemId}}&from=2026-10-01T00:00:00-04:00&to=2026-10-08T00:00:00-04:00
+Authorization: Bearer {{adminToken}}
+
+### Add operating expense
+POST {{baseUrl}}/api/admin/expenses
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"description":"Gas cocina","amount":150,"occurredAt":"2026-10-07T16:00:00-04:00"}
+
+### Sales and cost report, minute-precision range
+GET {{baseUrl}}/api/admin/reports/summary?from=2026-10-07T08:00:00-04:00&to=2026-10-07T23:59:00-04:00
+Authorization: Bearer {{adminToken}}
+
+### Audit log
+GET {{baseUrl}}/api/admin/audit?from=2026-10-07T00:00:00-04:00&to=2026-10-08T00:00:00-04:00
+Authorization: Bearer {{adminToken}}
+
+### List user accounts
+GET {{baseUrl}}/api/admin/users
+Authorization: Bearer {{adminToken}}
+
+### Create a cashier or kitchen user
+POST {{baseUrl}}/api/admin/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"username":"cashier01","password":"{{newUserPassword}}","role":"Cashier"}
+
+### Create held sale
+PUT {{baseUrl}}/api/held-sales/{{saleId}}
+Authorization: Bearer {{cashierToken}}
+Content-Type: application/json
+
+{"id":"{{saleId}}","terminalId":"POS-01","payload":"[]"}
+
+### List held sales for a terminal
+GET {{baseUrl}}/api/held-sales?terminalId=POS-01
+Authorization: Bearer {{cashierToken}}
+
+### Register a frequent customer
+POST {{baseUrl}}/api/customers
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"name":"Cliente frecuente","phone":"70000001","creditLimit":500}
+
+### Customer balances
+GET {{baseUrl}}/api/customers
+Authorization: Bearer {{cashierToken}}
+
+### Prepaid wallet top-up
+POST {{baseUrl}}/api/customers/{{customerId}}/wallet
+Authorization: Bearer {{cashierToken}}
+Content-Type: application/json
+
+{"amount":100,"description":"Prepago"}
+
+### Credit repayment
+POST {{baseUrl}}/api/customers/{{customerId}}/credit-payment
+Authorization: Bearer {{cashierToken}}
+Content-Type: application/json
+
+{"amount":50,"description":"Abono"}
+
+### Customer ledger
+GET {{baseUrl}}/api/customers/{{customerId}}/ledger
+Authorization: Bearer {{cashierToken}}
+
+### Void sale; admin only and requires reason
+POST {{baseUrl}}/api/admin/sales/{{saleId}}/void
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"reason":"Error de captura antes de iniciar preparación"}
+
+### Kitchen queue
+GET {{baseUrl}}/api/kitchen/tickets
+Authorization: Bearer {{kitchenToken}}
+
+### Update kitchen state
+PATCH {{baseUrl}}/api/kitchen/tickets/{{saleId}}
+Authorization: Bearer {{kitchenToken}}
+Content-Type: application/json
+
+{"state":"Preparing"}
+
+### Health
+GET {{baseUrl}}/health

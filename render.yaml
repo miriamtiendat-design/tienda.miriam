@@ -1,0 +1,23 @@
+databases:
+  - name: tiendamiriamdb
+    databaseName: tienda_miriam
+    user: tienda_miriam
+    plan: basic-256mb
+
+services:
+  - type: web
+    name: tienda-miriam-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: BusinessTimeZone
+        value: America/La_Paz
+      - key: Jwt__SigningKey
+        generateValue: true
+      - key: Bootstrap__AdminPassword
+        generateValue: true
+      - key: ConnectionStrings__Cloud
+        value: Host=${{databases.tiendamiriamdb.hostname}};Port=${{databases.tiendamiriamdb.port}};Database=${{databases.tiendamiriamdb.database}};Username=${{databases.tiendamiriamdb.user}};Password=${{databases.tiendamiriamdb.password}};SSL Mode=Require;Trust Server Certificate=true

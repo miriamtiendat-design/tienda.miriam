@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b12">
+  <title>Tienda Miriam | Cocina</title>
+  <style>
+    :root{color-scheme:dark;font:16px/1.55 Inter,"Segoe UI",system-ui,sans-serif;background:#090b12;color:#edf1fa;--canvas:#090b12;--surface:rgba(22,26,39,.8);--panel:rgba(31,37,54,.76);--line:rgba(188,200,230,.14);--ink:#edf1fa;--muted:#9aa5bb;--orange:#f29a55;--orange-dark:#ffb36f;--blue:#8da7ff;--green:#48d6a0}
+    *{box-sizing:border-box}
+    body{max-width:1280px;margin:auto;padding:clamp(1rem,3vw,2rem);background:radial-gradient(ellipse at 8% 0%,rgba(88,105,178,.18),transparent 36rem),radial-gradient(ellipse at 95% 25%,rgba(135,87,183,.13),transparent 32rem),var(--canvas);min-height:100vh}
+    header{display:flex;align-items:center;gap:1rem;margin-bottom:1.4rem}h1{margin:0;color:#f6f7fc;font-size:clamp(1.4rem,3vw,1.9rem);letter-spacing:.04em}header div div{color:var(--muted)}
+    form,.ticket{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:1.15rem;box-shadow:0 18px 50px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.045);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+    .ticket{transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+    .ticket:hover{transform:translateY(-4px);border-color:rgba(141,167,255,.3);box-shadow:0 24px 55px rgba(0,0,0,.36),0 0 26px rgba(141,167,255,.07),inset 0 1px 0 rgba(255,255,255,.06)}
+    input,button{font:inherit;padding:.72rem .85rem;border-radius:12px}input{display:block;width:100%;margin:.5rem 0 .75rem;background:rgba(9,12,20,.72);border:1px solid var(--line);color:var(--ink);transition:border-color .18s ease,box-shadow .18s ease}
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(141,167,255,.12)}
+    button{background:linear-gradient(135deg,#ee8c4b,#c96736);color:#fff8f2;border:1px solid rgba(242,154,85,.42);font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(201,103,54,.14);transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+    button:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 10px 24px rgba(201,103,54,.22)}
+    button:active:not(:disabled){transform:translateY(0) scale(.985)}
+    button:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+    button:disabled{background:#292e3b;border-color:var(--line);color:#778198;cursor:not-allowed;box-shadow:none}
+    #tickets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:1rem;margin-top:1rem}
+    .meta{color:var(--green);font-weight:650}.lines{font-size:1.2rem;margin:.8rem 0;white-space:pre-wrap}
+    #message{min-height:1.5rem;color:var(--orange-dark)}
+    @media(max-width:520px){body{padding:.85rem}header{align-items:flex-start}.ticket{border-radius:17px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <header><svg width="52" height="52" viewBox="0 0 64 64" aria-label="Logo Tienda Miriam"><defs><linearGradient id="brand" x2="1" y2="1"><stop stop-color="#ff9d42"/><stop offset="1" stop-color="#d93624"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="18" fill="url(#brand)"/><path d="M14 45V20h7l11 13 11-13h7v25h-8V31L32 42 22 31v14z" fill="#fff4ed"/></svg><div><h1>TIENDA MIRIAM · COCINA</h1><div>Comandas en vivo · Santa Cruz, Bolivia</div></div></header>
+  <form id="login"><label>Usuario<input name="username" autocomplete="username" required></label><label>Contraseña<input name="password" type="password" autocomplete="current-password" required></label><button>Iniciar sesión</button><button type="button" id="logout">Salir</button></form>
+  <div id="message" role="status"></div><section id="tickets" aria-live="polite"></section>
+  <script>
+    const message = document.getElementById("message");
+    const tickets = document.getElementById("tickets");
+    const token = () => sessionStorage.getItem("kitchenToken");
+    async function call(path, method = "GET", body) {
+      const response = await fetch(path, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token()}`,
+          ...(body === undefined ? {} : { "Content-Type": "application/json" })
+        },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) })
+      });
+      if (!response.ok) throw new Error(`Respuesta del servidor: ${response.status}`);
+      return response.status === 204 ? null : response.json();
+    }
+    async function refresh() {
+      if (!token()) return;
+      try {
+        const data = await call("/api/kitchen/tickets");
+        tickets.replaceChildren(...data.map(item => {
+          const card = document.createElement("article");
+          card.className = "ticket";
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent = `${new Date(item.createdAt).toLocaleString()} · ${item.state}${item.diningTable ? ` · ${item.diningTable}` : ""}`;
+          const lines = document.createElement("div");
+          lines.className = "lines";
+          lines.textContent = item.lines.map(line => `${line.quantity} × ${line.productName}${line.notes ? `\n   Nota: ${line.notes}` : ""}`).join("\n");
+          const next = { Queued: "Preparing", Preparing: "Ready", Ready: "Served" }[item.state];
+          card.append(meta, lines);
+          if (next) {
+            const button = document.createElement("button");
+            button.textContent = { Preparing: "Iniciar preparación", Ready: "Marcar lista", Served: "Marcar entregada" }[next];
+            button.addEventListener("click", async () => {
+              try { await call(`/api/kitchen/tickets/${item.id}`, "PATCH", { state: next }); await refresh(); }
+              catch (error) { message.textContent = error.message; }
+            });
+            card.append(button);
+          }
+          return card;
+        }));
+        message.textContent = `Actualizado ${new Date().toLocaleTimeString()}`;
+      } catch (error) {
+        message.textContent = error instanceof Error ? error.message : "Error consultando comandas.";
+      }
+    }
+    document.getElementById("login").addEventListener("submit", async event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+        });
+        if (!response.ok) throw new Error("Usuario o contraseña incorrectos.");
+        const result = await response.json();
+        sessionStorage.setItem("kitchenToken", result.accessToken);
+        event.currentTarget.elements.password.value = "";
+        await refresh();
+      } catch (error) { message.textContent = error.message; }
+    });
+    document.getElementById("logout").addEventListener("click", () => {
+      sessionStorage.removeItem("kitchenToken");
+      tickets.replaceChildren();
+      message.textContent = "Sesión cerrada.";
+    });
+    if (token()) refresh();
+    window.setInterval(refresh, 3000);
+  </script>
+</body>
+</html>

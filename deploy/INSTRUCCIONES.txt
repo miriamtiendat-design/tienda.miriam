@@ -1,0 +1,25 @@
+TIENDA MIRIAM POS — DISTRIBUCIÓN WINDOWS x64
+
+1. Extrae todo el contenido del paquete en una carpeta local de la caja.
+2. Abre TiendaMiriam.exe. No requiere instalar .NET Runtime.
+3. El paquete incluye una plantilla SQLite limpia; en el primer inicio se copia
+   y completa automáticamente en:
+   %LOCALAPPDATA%\TiendaMiriam\pos.db
+   Esta ubicación evita depender de permisos de escritura dentro de la carpeta
+   de instalación. Las ventas pueden registrarse localmente sin conexión.
+4. Para sincronizar con la nube, configura las variables de entorno de
+   TIENDA_CLOUD_API_URL, TIENDA_CLOUD_USERNAME y TIENDA_CLOUD_PASSWORD.
+   La URL debe usar HTTPS. El paquete no contiene credenciales ni datos demo.
+5. Configura TIENDA_THERMAL_PRINTER y TIENDA_KITCHEN_PRINTER con los nombres
+   exactos de impresoras instaladas en Windows, si se van a usar.
+6. Configura productos e insumos en el catálogo del POS o sincroniza primero
+   con una API que ya tenga el catálogo correcto. La base limpia no incluye
+   productos ficticios ni registros comerciales.
+
+Respalda la base pos.db con la aplicación cerrada; SQLite puede mantener
+archivos WAL/SHM mientras el POS está abierto. No copies una base activa como
+si fuera un respaldo consistente.
+
+El paquete está publicado para Windows x64 y contiene el runtime de .NET,
+dependencias de la aplicación y proveedor SQLite. No incluye certificado de
+firma de código ni instalador MSI.
